@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SplitOrders": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\ralff\\Downloads\\Bestellungen_2024-11-30_18_15.xlsx\""
+    }
+  }
+}
