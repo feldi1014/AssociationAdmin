@@ -21,7 +21,7 @@ namespace SplitOrders
         }
 
         public DataSet Data { get; private set; }
-        public Dictionary<string, List<string>> MemberGroupCards { get; private set; }
+        public Dictionary<string, List<MemberGroupCards>> MemberGroupCards { get; private set; }
 
         public bool GetDataSet()
         {
@@ -74,11 +74,12 @@ namespace SplitOrders
 
         public void UpdateRowContent()
         {
+            Console.WriteLine("Updating row content");
             foreach (DataTable table in Data.Tables)
             {
-                Console.WriteLine(table.TableName);
                 if (table.TableName == "Bestellungen")
                 {
+                    Console.WriteLine($"{table.TableName} {table.Rows.Count}");
                     List<string> columns = new List<string>() { "Bestelldatum", "Vorname", "Nachname", "Strasse", "PLZ", "Ort", "Land", "Mitgliedsnummer", "Mitgliedsgruppen" };
                     DataRow lastRow = null;
                     foreach (DataRow row in table.Rows)
@@ -107,20 +108,21 @@ namespace SplitOrders
 
         public void GetCardsAndGroups()
         {
-            Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
+            Console.WriteLine("Mitgliedergruppen und Wunschkarten");
+            var dict = new Dictionary<string, List<MemberGroupCards>>();
 
             foreach (DataTable table in Data.Tables)
             {
-                Console.WriteLine(table.TableName);
                 if (table.TableName == "Bestellungen")
                 {
                     foreach (DataRow row in table.Rows)
                     {
                         string group = row["Mitgliedsgruppen"].ToString();
-                        List<string> list;
+                        string karte = row["Wunschkarte"].ToString();
+                        List<MemberGroupCards> list;
                         if (!dict.ContainsKey(group))
                         {
-                            list = new List<string>();
+                            list = new List<MemberGroupCards>();
                             dict[group] = list;
                         }
                         else
@@ -128,12 +130,17 @@ namespace SplitOrders
                             list = dict[group];
                         }
 
-                        string karte = row["Wunschkarte"].ToString();
                         if (!string.IsNullOrEmpty(karte))
                         {
-                            if (!list.Contains(karte))
+                            var memberGroupCard = new MemberGroupCards(group, karte);
+                            if (!list.Contains(memberGroupCard))
                             {
-                                list.Add(karte);
+                                list.Add(memberGroupCard);
+                            }
+                            else
+                            {
+                                int i = list.IndexOf(memberGroupCard);
+                                list[i].Count++;
                             }
                         }
                     }
@@ -142,10 +149,9 @@ namespace SplitOrders
             MemberGroupCards = dict;
             foreach(var pair in dict)
             {
-                foreach(string karte in pair.Value) 
+                foreach(var m in pair.Value) 
                 {
-                    Console.WriteLine($"{pair.Key} {karte}");
-
+                    Console.WriteLine(m.ToString());
                 }
             }
         }

@@ -12,6 +12,7 @@ namespace SplitOrders
     {
         internal void Fill(IXLWorksheet worksheet, List<DataRow> rows, DataTable table)
         {
+            Console.WriteLine($"{worksheet.Name} Count: {rows.Count}");
             // Kopfzeile schreiben
             for (int i = 0; i < table.Columns.Count; i++)
             {
