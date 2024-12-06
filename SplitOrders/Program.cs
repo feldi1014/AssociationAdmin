@@ -8,118 +8,108 @@ if (args.Length == 0)
     return;
 }
 
-var filePath = new FileInfo(args[0]);
-if (!filePath.Exists)
+var orderFileName = new FileInfo(args[0]);
+if (!orderFileName.Exists)
 {
-    Console.WriteLine($"Missing excel file at {filePath.FullName}!");
+    Console.WriteLine($"Missing excel file at {orderFileName.FullName}!");
     return;
 }
 
-var helper = new DataSetHelper(filePath);
+var helperOrders = new DataSetHelper(orderFileName);
 
 
-if (!helper.GetDataSet())
+if (!helperOrders.GetDataSet())
 {
+    Console.WriteLine("Getting dataset Bestellungen fehlgeschlage!");
     return;
 }
 
-helper.UpdateRowContent();
+helperOrders.UpdateRowContent();
 
-helper.GetCardsAndGroups();
+helperOrders.GetCardsAndGroups();
 
-DataTable bestellungen = helper.Data.Tables["Bestellungen"];
-if (bestellungen == null)
+helperOrders.OptimizeOrders();
+
+helperOrders.ValidateOrders();
+
+if (args.Length >= 2)
 {
-    return;
+    AppendMemberData(new FileInfo(args[1]), helperOrders);
 }
 
-Console.WriteLine();
+if (args.Length >= 3)
+{
+    AppendLastYearData(new FileInfo(args[2]), helperOrders);
+}
 
-var gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-  (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-  row.Field<string>("Wunschkarte").Contains("JUGEND")).ToList();
-// Gefilterte Ergebnisse anzeigen
-if (gefilterteBestellungen.Any())
-{
-    Console.WriteLine("Falsche Kartenbestellung Erwachsene:");
-    foreach (var row in gefilterteBestellungen)
-    {
-        Console.WriteLine($"{row["Mitgliedsnummer"]} {row["Nachname"]} {row["Mitgliedsgruppen"]}, Wunschkarte: {row["Wunschkarte"]}");
-    }
-}
-gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-  (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && 
-  !row.Field<string>("Wunschkarte").Contains("JUGEND")).ToList();
-// Gefilterte Ergebnisse anzeigen
-if (gefilterteBestellungen.Any())
-{
-    Console.WriteLine("Falsche Kartenbestellung Jugend:");
-    foreach (var row in gefilterteBestellungen)
-    {
-        Console.WriteLine($"{row["Mitgliedsnummer"]} {row["Nachname"]} {row["Mitgliedsgruppen"]}, Wunschkarte: {row["Wunschkarte"]}");
-    }
-}
 
 using (var workbook = new XLWorkbook())
 {
     Console.WriteLine();
     Console.WriteLine("Bestellungen gesplittet:");
-    var builder = new WorksheetBuilder();
+    var builder = new WorksheetBuilder(helperOrders.Data, workbook);
 
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-      row.Field<string>("Wunschkarte").Contains("Moos")).ToList();
-
-    builder.Fill(workbook.Worksheets.Add("Erwachsene Moos"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-      row.Field<string>("Wunschkarte").Contains("Günzried")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Erwachsene GW"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-      row.Field<string>("Wunschkarte").Contains("Weißried")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Erwachsene WR"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-      row.Field<string>("Wunschkarte").Contains("Donau")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Erwachsene Donau"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Erwachsene") || row.Field<string>("Mitgliedsgruppen").Contains("Senioren")) && 
-      row.Field<string>("Wunschkarte").Contains("Kammel")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Erwachsene Kammel"), gefilterteBestellungen, bestellungen);
-
-    // Jugend
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && 
-      row.Field<string>("Wunschkarte").Contains("Moos")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Jugend Moos"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && 
-      row.Field<string>("Wunschkarte").Contains("Günzried")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Jugend GW"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && 
-      row.Field<string>("Wunschkarte").Contains("Weißried")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Jugend WR"), gefilterteBestellungen, bestellungen);
-
-    gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => 
-      (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && 
-      row.Field<string>("Wunschkarte").Contains("Donau")).ToList();
-    builder.Fill(workbook.Worksheets.Add("Jugend Donau"), gefilterteBestellungen, bestellungen);
-
-    //gefilterteBestellungen = bestellungen.AsEnumerable().Where(row => (row.Field<string>("Mitgliedsgruppen").Contains("Jugend") || row.Field<string>("Mitgliedsgruppen").Contains("Kind")) && row.Field<string>("Wunschkarte").Contains("Kammel")).ToList();
-    //builder.Fill(workbook.Worksheets.Add("Jugend Kammel"), gefilterteBestellungen, bestellungen);
+    builder.ExportAll();
 
     workbook.SaveAs("SplitBestellungen.xlsx");
-    Console.Write("Press any key");
-    Console.ReadKey();
 }
 
+Console.Write("Press any key");
+Console.ReadKey();
 
 
+
+static void AppendMemberData(FileInfo memberFileName, DataSetHelper helperOrders)
+{
+    DataSetHelper helperMembers = null;
+    if (!memberFileName.Exists)
+    {
+        Console.WriteLine($"Missing excel file at {memberFileName.FullName}!");
+    }
+    else
+    {
+        helperMembers = new DataSetHelper(memberFileName);
+        if (!helperMembers.GetDataSet())
+        {
+            Console.WriteLine("Getting dataset Mitglieder fehlgeschlage!");
+        }
+        else
+        {
+            foreach (DataTable dt in helperMembers.Data.Tables)
+            {
+                helperOrders.Data.Tables.Add(dt.Copy());
+            }
+            helperMembers.SetPrimaryKey("Mitglieder", "angelflix ID");
+            helperOrders.AppendColumnMitgliedsJahre("Mitglieder");
+            helperOrders.AppendColumnMitgliedsJahre("Bestellungen");
+        }
+    }
+}
+
+static void AppendLastYearData(FileInfo lastYearFileName, DataSetHelper helperOrders)
+{
+    DataSetHelper helperLastYear = null;
+    if (!lastYearFileName.Exists)
+    {
+        Console.WriteLine($"Missing excel file at {lastYearFileName.FullName}!");
+    }
+    else
+    {
+        helperLastYear = new DataSetHelper(lastYearFileName);
+        if (!helperLastYear.GetDataSet())
+        {
+            Console.WriteLine("Getting dataset last year fehlgeschlage!");
+        }
+        else
+        {
+            foreach (DataTable dt in helperLastYear.Data.Tables)
+            {
+                var copyTable = dt.Copy();
+                copyTable.TableName = "LastYear";
+
+                helperOrders.Data.Tables.Add(copyTable);
+            }
+            helperOrders.AppendColumnsForLastYear();
+        }
+    }
+}
