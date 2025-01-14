@@ -1,6 +1,10 @@
 ﻿using System.Data;
 using ClosedXML.Excel;
-using SplitOrders;
+using ExcelHelper;
+
+Console.WriteLine("Split orders");
+Console.WriteLine("Usage Examle Bestellungen.xlsx Mitglieder.xlsx");
+Console.WriteLine("Usage Examle Bestellungen.xlsx Mitglieder.xlsx 2024_Mitgliederkartenvergabe_final.xls");
 
 if (args.Length == 0)
 {
@@ -20,7 +24,7 @@ var helperOrders = new DataSetHelper(orderFileName);
 
 if (!helperOrders.GetDataSet())
 {
-    Console.WriteLine("Getting dataset Bestellungen fehlgeschlage!");
+    Console.WriteLine("Getting dataset Bestellungen fehlgeschlagen!");
     return;
 }
 
@@ -49,7 +53,7 @@ using (var workbook = new XLWorkbook())
     Console.WriteLine("Bestellungen gesplittet:");
     var builder = new WorksheetBuilder(helperOrders.Data, workbook);
 
-    builder.ExportAll();
+    builder.ExportOrderSplit();
 
     workbook.SaveAs("SplitBestellungen.xlsx");
 }

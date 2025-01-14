@@ -1,4 +1,4 @@
-﻿internal class MemberOrderPositions : IEquatable<MemberOrderPositions>
+﻿public class MemberOrderPositions : IEquatable<MemberOrderPositions>
 {
     public MemberOrderPositions(string bestellDatum, string mitgliedsNummer) 
     {

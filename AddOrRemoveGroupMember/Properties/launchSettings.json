@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AddOrRemove": {
+      "commandName": "Project",
+      "commandLineArgs": "Mitglieder.xlsx --fees -F:Bestellkostenerstattung -By:SplitBestellungen.xlsx -ByTable:\"Gesamt\""
+    }
+  }
+}

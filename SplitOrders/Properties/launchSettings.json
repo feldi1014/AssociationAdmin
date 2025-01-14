@@ -2,7 +2,7 @@
   "profiles": {
     "SplitOrders": {
       "commandName": "Project",
-      "commandLineArgs": "Bestellungen_2024-12-06-1559.xlsx Mitglieder_2024-12-06-1705.xlsx 2024_Mitgliederkartenvergabe_final.xls"
+      "commandLineArgs": "Bestellungen.xlsx Mitglieder.xlsx"
     }
   }
 }
